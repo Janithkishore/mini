@@ -1,0 +1,5 @@
+node_modules/
+.env
+database/mentorship.db.bak
+.vscode/
+error.log
