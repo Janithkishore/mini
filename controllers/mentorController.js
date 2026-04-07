@@ -84,10 +84,12 @@ async function addAttendance(req, res) {
         console.log('[addAttendance] assignment check:', assigned);
         if (!assigned) return res.status(403).json({ error: 'Student not assigned to you.' });
 
-        await db.runAsync(`
-            INSERT OR REPLACE INTO attendance (student_id, subject_code, total_classes, attended_classes, semester, academic_year)
+        await db.runAsync(
+            `INSERT INTO attendance (student_id, subject_code, total_classes, attended_classes, semester, academic_year)
             VALUES (?, ?, ?, ?, ?, ?)
-        `, [student_id, subject_code, total_classes, attended_classes, semester || null, academic_year || null]);
+            ON DUPLICATE KEY UPDATE total_classes = VALUES(total_classes), attended_classes = VALUES(attended_classes), semester = VALUES(semester), academic_year = VALUES(academic_year)`,
+            [student_id, subject_code, total_classes, attended_classes, semester || null, academic_year || null]
+        );
         res.status(201).json({ message: 'Attendance recorded.' });
     } catch (err) {
         console.error('[addAttendance] error:', err.message);

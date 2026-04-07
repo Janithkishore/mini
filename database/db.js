@@ -2,42 +2,40 @@
  * Database Connection Module
  */
 
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const mysql = require('mysql2/promise');
 
-const dbPath = path.join(__dirname, 'mentorship.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) console.error('Database connection error:', err.message);
-});
-
-db.run('PRAGMA foreign_keys = ON');
-
-// Promise wrappers for async/await
-db.runAsync = function (sql, params = []) {
-    return new Promise((resolve, reject) => {
-        this.run(sql, params, function (err) {
-            if (err) reject(err);
-            else resolve({ lastID: this.lastID, changes: this.changes });
-        });
-    });
+// Update these values with your MySQL server credentials
+const dbConfig = {
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || 'janith@1234',
+    database: process.env.DB_NAME || 'mentorship',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 };
 
-db.getAsync = function (sql, params = []) {
-    return new Promise((resolve, reject) => {
-        this.get(sql, params, (err, row) => {
-            if (err) reject(err);
-            else resolve(row);
-        });
-    });
-};
+const pool = mysql.createPool(dbConfig);
 
-db.allAsync = function (sql, params = []) {
-    return new Promise((resolve, reject) => {
-        this.all(sql, params, (err, rows) => {
-            if (err) reject(err);
-            else resolve(rows || []);
-        });
-    });
+// Async query wrappers
+const db = {
+    query: async (sql, params = []) => {
+        const [rows] = await pool.query(sql, params);
+        return rows;
+    },
+    getAsync: async (sql, params = []) => {
+        const [rows] = await pool.query(sql, params);
+        return rows[0] || null;
+    },
+    allAsync: async (sql, params = []) => {
+        const [rows] = await pool.query(sql, params);
+        return rows;
+    },
+    runAsync: async (sql, params = []) => {
+        const [result] = await pool.query(sql, params);
+        return result;
+    },
+    pool
 };
 
 module.exports = db;

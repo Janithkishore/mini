@@ -9,19 +9,19 @@ const bcrypt = require('bcryptjs');
 // ========== DASHBOARD STATS ==========
 async function getDashboardStats(req, res) {
     try {
-        const [totalStudents] = await db.allAsync('SELECT COUNT(*) as cnt FROM users WHERE role = "student"');
+        const [totalStudents] = await db.allAsync("SELECT COUNT(*) as cnt FROM users WHERE role = 'student'");
         const [totalMentors] = await db.allAsync('SELECT COUNT(*) as cnt FROM mentors');
         const avgPerf = await db.getAsync(`
             SELECT AVG(avg_marks) as avg_performance FROM (
                 SELECT student_id, AVG(marks_obtained * 100.0 / NULLIF(max_marks, 0)) as avg_marks
                 FROM grades GROUP BY student_id
-            )
+            ) as sub
         `);
         const avgRating = await db.getAsync(`
-            SELECT AVG(CAST(response_value AS REAL)) as avg_rating
+            SELECT AVG(CAST(fr.response_value AS DECIMAL(10,2))) as avg_rating
             FROM feedback_responses fr
             JOIN feedback_questions fq ON fr.question_id = fq.question_id
-            WHERE fq.question_type = 'rating' AND CAST(fr.response_value AS REAL) BETWEEN 1 AND 5
+            WHERE fq.question_type = 'rating' AND CAST(fr.response_value AS DECIMAL(10,2)) BETWEEN 1 AND 5
         `);
         const lowAttendance = await db.allAsync(`
             SELECT u.user_id, u.name, u.register_number, a.subject_code,
@@ -32,13 +32,13 @@ async function getDashboardStats(req, res) {
         `);
         const topMentors = await db.allAsync(`
             SELECT m.mentor_id, u.name, m.department,
-                   ROUND(AVG(CAST(fr.response_value AS REAL)), 2) as avg_rating,
-                   COUNT(*) as feedback_count
+                   ROUND(AVG(CAST(fr.response_value AS DECIMAL(10,2))), 2) as avg_rating,
+                   COUNT(fr.response_id) as feedback_count
             FROM mentors m
             JOIN users u ON m.user_id = u.user_id
             LEFT JOIN feedback_responses fr ON m.mentor_id = fr.mentor_id
             LEFT JOIN feedback_questions fq ON fr.question_id = fq.question_id AND fq.question_type = 'rating'
-            WHERE CAST(fr.response_value AS REAL) BETWEEN 1 AND 5
+            WHERE CAST(fr.response_value AS DECIMAL(10,2)) BETWEEN 1 AND 5 OR fr.response_value IS NULL
             GROUP BY m.mentor_id
             ORDER BY avg_rating DESC
             LIMIT 5

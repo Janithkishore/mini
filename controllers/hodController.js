@@ -50,9 +50,12 @@ async function assignMentor(req, res) {
             return res.status(400).json({ error: 'Invalid student.' });
         }
 
-        // Create assignment
+        // Create assignment (MySQL upsert)
         console.log('Creating assignment:', { actualMentorId, student_id });
-        await db.runAsync('INSERT OR REPLACE INTO assignments (mentor_id, student_id) VALUES (?, ?)', [actualMentorId, student_id]);
+        await db.runAsync(
+            'INSERT INTO assignments (mentor_id, student_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE mentor_id = VALUES(mentor_id), student_id = VALUES(student_id)',
+            [actualMentorId, student_id]
+        );
         console.log('Assignment created successfully');
 
         res.status(201).json({ message: 'Mentor assigned successfully.' });
