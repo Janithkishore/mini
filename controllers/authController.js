@@ -13,7 +13,7 @@ async function register(req, res) {
             return res.status(400).json({ error: 'Name, email, password, and role are required.' });
         }
 
-        const validRoles = ['admin', 'student', 'mentor'];
+        const validRoles = ['admin', 'student', 'mentor', 'hod'];
         if (!validRoles.includes(role)) {
             return res.status(400).json({ error: 'Invalid role.' });
         }

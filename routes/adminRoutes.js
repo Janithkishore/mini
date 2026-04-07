@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
-const { requireAdmin } = require('../middleware/auth');
+const { requireAdmin, requireHOD } = require('../middleware/auth');
 
 // Dashboard
 router.get('/dashboard', requireAdmin, adminController.getDashboardStats);
@@ -9,9 +9,12 @@ router.get('/dashboard', requireAdmin, adminController.getDashboardStats);
 // Users & Mentors
 router.get('/users', requireAdmin, adminController.getUsers);
 router.get('/mentors', requireAdmin, adminController.getMentors);
+router.post('/mentors', requireAdmin, adminController.createMentor);
+router.put('/mentors/:id', requireAdmin, adminController.updateMentor);
+router.delete('/mentors/:id', requireAdmin, adminController.deleteMentor);
 
 // Assignments
-router.post('/assignments', requireAdmin, adminController.assignMentor);
+router.get('/assignments', requireAdmin, adminController.getAssignments);
 
 // Questions
 router.get('/questions', requireAdmin, adminController.getQuestions);
@@ -25,10 +28,7 @@ router.get('/students/:id', requireAdmin, adminController.getStudentProfile);
 router.get('/mentors/:id/profile', requireAdmin, adminController.getMentorProfile);
 router.get('/mentors/comparison', requireAdmin, adminController.getMentorComparison);
 
-// Attendance, Grades, Projects
-router.post('/attendance', requireAdmin, adminController.addAttendance);
-router.post('/grades', requireAdmin, adminController.addGrade);
-router.post('/projects', requireAdmin, adminController.addProject);
+// Attendance, Grades, Projects are now handled by Mentors
 
 // Reports
 router.get('/reports', requireAdmin, adminController.getReports);

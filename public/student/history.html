@@ -1,39 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Feedback History - Student</title>
     <link rel="stylesheet" href="../css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
+
 <body class="app-layout">
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
     <aside class="sidebar">
-        <div class="sidebar-logo">Student Portal</div>
+        <div class="sidebar-logo">StudentHub</div>
         <nav class="sidebar-nav">
-            <a href="dashboard.html">Dashboard</a>
-            <a href="feedback.html">Submit Feedback</a>
-            <a href="history.html" class="active">My History</a>
-            <a href="../index.html" onclick="event.preventDefault(); logout();">Logout</a>
+            <a href="dashboard.html">
+                <i class="ph ph-chart-bar"></i> Dashboard
+            </a>
+            <a href="feedback.html">
+                <i class="ph ph-chat-circle"></i> Submit Feedback
+            </a>
+            <a href="history.html" class="active">
+                <i class="ph ph-file-text"></i> My History
+            </a>
+            <div style="margin-top: auto; padding: 1rem 2rem;">
+                <button class="theme-toggle" id="themeToggle"
+                    style="width: 40px; height: 40px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;"><i class="ph ph-moon"></i></button>
+                <a href="../index.html" onclick="event.preventDefault(); logout();"
+                    style="color: var(--danger); padding: 0.5rem 0; display: block; font-weight: 600;">Logout</a>
+            </div>
         </nav>
     </aside>
+
     <main class="main-content">
-        <h1>My Feedback History</h1>
-        <p style="color: var(--text-secondary); margin-bottom: 2rem;">All feedback you have submitted.</p>
-        <div class="card">
-            <div id="historyList">
-                <p style="color: var(--text-secondary);">Loading...</p>
-            </div>
-        </div>
+        <header style="margin-bottom: 3rem;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Archive Vault</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">A comprehensive history of your qualitative
+                evaluations and mentorship interactions.</p>
+        </header>
+
+        <section id="historyList" style="display: flex; flex-direction: column; gap: 2rem;">
+            <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Reconstructing history
+                timeline...</p>
+        </section>
     </main>
     <script src="../js/api.js"></script>
     <script>
+        // Theme toggle logic
+        const storedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', storedTheme);
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            themeBtn.innerHTML = storedTheme === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            themeBtn.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+                themeBtn.innerHTML = next === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            });
+        }
+
         async function loadHistory() {
             try {
                 const res = await api('feedback/history');
                 const el = document.getElementById('historyList');
                 if (!res.history || res.history.length === 0) {
-                    el.innerHTML = '<p style="color: var(--text-secondary);">No feedback submitted yet.</p>';
+                    el.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No historical records found for this user.</p>';
                     return;
                 }
                 const byDate = {};
@@ -42,18 +81,51 @@
                     if (!byDate[k]) byDate[k] = [];
                     byDate[k].push(h);
                 });
-                el.innerHTML = Object.entries(byDate).sort((a,b)=>b[0].localeCompare(a[0])).map(([ts, items]) => `
-                    <div style="padding: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem;">
-                        <strong>${items[0].mentor_name}</strong> — ${new Date(ts).toLocaleString()}
-                        ${items.map(i => `<p style="margin-top: 0.5rem; color: var(--text-secondary);">${i.question_text}: <strong>${i.response_value}</strong></p>`).join('')}
+
+                el.innerHTML = Object.entries(byDate).sort((a, b) => b[0].localeCompare(a[0])).map(([ts, items]) => `
+                    <div class="card" style="padding: 2rem; border-left: 4px solid var(--accent-start);">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+                            <div>
+                                <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em;">Academic Mentor</div>
+                                <div style="font-weight: 800; font-size: 1.25rem; color: var(--accent-start);">${items[0].mentor_name}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em;">Submission Date</div>
+                                <div style="font-weight: 600;">${new Date(ts).toLocaleDateString()}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">${new Date(ts).toLocaleTimeString()}</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                            ${items.map(i => `
+                                <div style="padding: 1.25rem; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem;">
+                                    <div style="font-size: 0.95rem; line-height: 1.4;">${i.question_text}</div>
+                                    <div class="badge ${i.response_value >= 4 ? 'badge-success' : 'badge-warning'}" style="min-width: 50px; text-align: center; font-size: 1rem;">
+                                        ${i.response_value}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        ${items[0].comment ? `
+                            <div style="margin-top: 1.5rem; padding: 1.25rem; border-radius: 12px; border: 1px dashed var(--border); color: var(--text-secondary); font-style: italic;">
+                                " ${items[0].comment} "
+                            </div>
+                        ` : ''}
                     </div>
                 `).join('');
             } catch (e) {
-                document.getElementById('historyList').innerHTML = '<p style="color: var(--danger);">Failed to load.</p>';
+                document.getElementById('historyList').innerHTML = '<p style="color: var(--danger); text-align: center;">Timeline synchronization error.</p>';
             }
         }
-        async function logout() { try { await api('auth/logout', { method: 'POST' }); } catch (e) {} location.href = '../index.html'; }
+
+        async function logout() {
+            try { await api('auth/logout', { method: 'POST' }); } catch (e) { }
+            location.href = '../index.html';
+        }
+
         loadHistory();
     </script>
 </body>
+
 </html>

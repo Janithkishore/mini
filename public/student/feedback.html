@@ -1,44 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit Feedback - Student</title>
     <link rel="stylesheet" href="../css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
+
 <body class="app-layout">
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
     <aside class="sidebar">
-        <div class="sidebar-logo">Student Portal</div>
+        <div class="sidebar-logo">StudentHub</div>
         <nav class="sidebar-nav">
-            <a href="dashboard.html">Dashboard</a>
-            <a href="feedback.html" class="active">Submit Feedback</a>
-            <a href="history.html">My History</a>
-            <a href="../index.html" onclick="event.preventDefault(); logout();">Logout</a>
+            <a href="dashboard.html">
+                <i class="ph ph-chart-bar"></i> Dashboard
+            </a>
+            <a href="feedback.html" class="active">
+                <i class="ph ph-chat-circle"></i> Submit Feedback
+            </a>
+            <a href="history.html">
+                <i class="ph ph-file-text"></i> My History
+            </a>
+            <div style="margin-top: auto; padding: 1rem 2rem;">
+                <button class="theme-toggle" id="themeToggle"
+                    style="width: 40px; height: 40px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;"><i class="ph ph-moon"></i></button>
+                <a href="../index.html" onclick="event.preventDefault(); logout();"
+                    style="color: var(--danger); padding: 0.5rem 0; display: block; font-weight: 600;">Logout</a>
+            </div>
         </nav>
     </aside>
-    <main class="main-content">
-        <h1>Submit Feedback</h1>
-        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Submit structured feedback for your mentor. Duplicate submissions are prevented.</p>
 
-        <div class="card" id="noMentor" style="display: none;">
-            <p style="color: var(--warning);">No mentor assigned. Contact admin.</p>
+    <main class="main-content">
+        <header style="margin-bottom: 3rem;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Academic Inquiry</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Provide structured feedback on your mentorship
+                experience. Submissions are finalized per cycle.</p>
+        </header>
+
+        <div id="noMentor" class="card" style="display: none; padding: 2rem; border-left: 4px solid var(--danger);">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span style="font-size: 1.5rem;"><i class="ph ph-warning"></i></span>
+                <div>
+                    <h3 style="margin: 0; color: var(--danger);">Allocation Pending</h3>
+                    <p style="margin: 0.25rem 0 0; color: var(--text-secondary);">No academic mentor is currently
+                        assigned to your profile. Feedback submission is locked.</p>
+                </div>
+            </div>
         </div>
 
-        <div class="card" id="feedbackCard">
+        <div id="feedbackCard" class="card" style="padding: 2.5rem; max-width: 800px;">
             <form id="feedbackForm">
-                <div id="questionsContainer"></div>
-                <div class="form-group">
-                    <label>Additional Comment (optional)</label>
-                    <textarea name="comment" rows="3"></textarea>
+                <div id="questionsContainer"
+                    style="display: flex; flex-direction: column; gap: 2rem; margin-bottom: 2rem;">
+                    <p style="color: var(--text-secondary); text-align: center;">Preparing submission form...</p>
                 </div>
-                <button type="submit" class="btn btn-primary">Submit Feedback</button>
+
+                <div style="padding-top: 2rem; border-top: 1px solid var(--border);">
+                    <div class="form-group">
+                        <label style="font-weight: 700; display: block; margin-bottom: 0.75rem;">Qualitative
+                            Observations (Optional)</label>
+                        <textarea name="comment" rows="4"
+                            placeholder="Detail any specific interactions or suggestions..."
+                            style="background: var(--bg-primary); border: 1px solid var(--border); transition: border-color 0.2s;"></textarea>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary"
+                        style="height: 52px; padding: 0 2rem; font-weight: 700;">Finalize Submission</button>
+                </div>
             </form>
-            <div id="msg" class="alert" style="display: none; margin-top: 1rem;"></div>
+            <div id="msg" class="alert" style="display: none; margin-top: 2rem; border-radius: 12px;"></div>
         </div>
     </main>
     <script src="../js/api.js"></script>
     <script>
+        // Theme toggle logic
+        const storedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', storedTheme);
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            themeBtn.innerHTML = storedTheme === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            themeBtn.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+                themeBtn.innerHTML = next === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            });
+        }
+
         let mentorId = null;
 
         async function loadData() {
@@ -57,28 +116,53 @@
 
                 const container = document.getElementById('questionsContainer');
                 container.innerHTML = '';
-                (questionsRes.questions || []).forEach(q => {
+
+                const questionsHTML = (questionsRes.questions || []).map(q => {
                     let input = '';
                     if (q.question_type === 'rating') {
-                        input = `<div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                            ${[1,2,3,4,5].map(v => `<label><input type="radio" name="q_${q.question_id}" value="${v}" required> ${v}</label>`).join('')}
+                        input = `
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            ${[1, 2, 3, 4, 5].map(v => `
+                                <label style="flex: 1; text-align: center; cursor: pointer;">
+                                    <input type="radio" name="q_${q.question_id}" value="${v}" required style="display: none;" onchange="this.parentElement.parentElement.querySelectorAll('div').forEach(el => { el.style.background='var(--bg-primary)'; el.style.color='inherit'; }); this.nextElementSibling.style.background='var(--accent-start)'; this.nextElementSibling.style.color='white';">
+                                    <div style="padding: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s; font-weight: 700;">${v}</div>
+                                </label>`).join('')}
                         </div>`;
                     } else if (q.question_type === 'yes-no') {
-                        input = `<select name="q_${q.question_id}" required><option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option></select>`;
+                        input = `
+                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                            ${['Yes', 'No'].map(v => `
+                                <label style="flex: 1; text-align: center; cursor: pointer;">
+                                    <input type="radio" name="q_${q.question_id}" value="${v}" required style="display: none;" onchange="this.parentElement.parentElement.querySelectorAll('div').forEach(el => { el.style.background='var(--bg-primary)'; el.style.color='inherit'; }); this.nextElementSibling.style.background='var(--accent-start)'; this.nextElementSibling.style.color='white';">
+                                    <div style="padding: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s; font-weight: 700;">${v}</div>
+                                </label>`).join('')}
+                        </div>`;
                     } else {
-                        input = `<textarea name="q_${q.question_id}" rows="3" required></textarea>`;
+                        input = `<textarea name="q_${q.question_id}" rows="3" required style="margin-top: 1rem; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px;"></textarea>`;
                     }
-                    container.innerHTML += `<div class="form-group"><label>${q.question_text}</label>${input}</div>`;
-                });
+                    return `
+                    <div style="padding: 1.5rem; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border);">
+                        <label style="font-weight: 600; font-size: 1.05rem;">${q.question_text}</label>
+                        ${input}
+                    </div>`;
+                }).join('');
+
+                container.innerHTML = questionsHTML;
             } catch (e) {
-                document.getElementById('msg').className = 'alert alert-danger';
-                document.getElementById('msg').textContent = 'Failed to load.';
-                document.getElementById('msg').style.display = 'block';
+                const msg = document.getElementById('msg');
+                msg.className = 'alert alert-danger';
+                msg.textContent = 'Resource synchronization failed. Please refresh.';
+                msg.style.display = 'block';
             }
         }
 
         document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Transmitting...';
+
             const fd = new FormData(e.target);
             const answers = [];
             for (const [k, v] of fd.entries()) {
@@ -87,24 +171,39 @@
             const comment = fd.get('comment') || null;
             const msg = document.getElementById('msg');
             msg.style.display = 'none';
+
             try {
                 await api('feedback/submit', {
                     method: 'POST',
                     body: JSON.stringify({ mentor_id: mentorId, answers, comment })
                 });
                 msg.className = 'alert alert-success';
-                msg.textContent = 'Feedback submitted successfully!';
+                msg.textContent = 'Feedback successfully recorded and secured.';
                 msg.style.display = 'block';
                 e.target.reset();
+                // Reset custom radio backgrounds
+                e.target.querySelectorAll('div').forEach(el => {
+                    if (el.style.background.includes('accent')) {
+                        el.style.background = 'var(--bg-primary)';
+                        el.style.color = 'inherit';
+                    }
+                });
             } catch (err) {
                 msg.className = 'alert alert-danger';
-                msg.textContent = err.message || 'Submission failed';
+                msg.textContent = err.message || 'Submission integrity check failed';
                 msg.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
             }
         });
 
-        async function logout() { try { await api('auth/logout', { method: 'POST' }); } catch (e) {} location.href = '../index.html'; }
+        async function logout() {
+            try { await api('auth/logout', { method: 'POST' }); } catch (e) { }
+            location.href = '../index.html';
+        }
         loadData();
     </script>
 </body>
+
 </html>

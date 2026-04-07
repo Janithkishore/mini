@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance - HOD</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body class="app-layout">
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">HODPortal</div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html">
+                <i class="ph ph-chart-bar"></i> Dashboard
+            </a>
+            <a href="mentors.html">
+                <i class="ph ph-chalkboard-teacher"></i> Mentors
+            </a>
+            <a href="students.html" class="active">
+                <i class="ph ph-graduation-cap"></i> Students
+            </a>
+            <a href="assignments.html">
+                <i class="ph ph-target"></i> Assignments
+            </a>
+            <a href="reports.html">
+                <i class="ph ph-clipboard-text"></i> Reports
+            </a>
+            <a href="questions.html">
+                <i class="ph ph-question"></i> Questions
+            </a>
+            <div style="margin-top: auto; padding: 1rem 2rem;">
+                <button class="theme-toggle" id="themeToggle"
+                    style="width: 40px; height: 40px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;"><i class="ph ph-moon"></i></button>
+                <a href="../index.html" onclick="logout()"
+                    style="color: var(--danger); padding: 0.5rem 0; display: block; font-weight: 600;">Logout</a>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header style="margin-bottom: 3rem;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Student Explorer</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Search and monitor student academic standing and
+                attendance.</p>
+        </header>
+
+        <div class="card" style="padding: 2rem; margin-bottom: 2rem;">
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <div style="position: relative; flex: 1;">
+                    <span
+                        style="position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 1.2rem;"><i class="ph ph-magnifying-glass"></i></span>
+                    <input type="text" id="searchInput" placeholder="Enter name or register number..."
+                        style="width: 100%; padding: 1rem 1rem 1rem 3.5rem; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-primary); height: 56px; font-size: 1rem;">
+                </div>
+                <button class="btn btn-primary" onclick="searchStudents()"
+                    style="height: 56px; padding: 0 2rem; border-radius: 12px; font-weight: 700;">Explore</button>
+            </div>
+            <div id="searchResults"
+                style="margin-top: 1.5rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+            </div>
+        </div>
+
+        <div id="profileSection" style="display: none;">
+            <div class="card" style="padding: 2.5rem; margin-bottom: 2rem; border-left: 4px solid var(--accent-start);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div id="profileContent"></div>
+                    <div id="attendanceAlert" class="badge badge-danger"
+                        style="display: none; padding: 0.75rem 1.5rem; font-size: 0.9rem;"><i class="ph ph-warning"></i> Low Attendance</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 2rem;">
+                <div class="card" style="padding: 2rem;">
+                    <h3 style="margin-bottom: 1.5rem;">Academic Performance</h3>
+                    <div style="height: 350px;">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                    <button class="btn btn-primary" onclick="downloadReport()"
+                        style="margin-top: 2rem; width: 100%; height: 52px; border-radius: 10px;">Download Profile
+                        (PDF)</button>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 2rem;">
+                    <div class="card" style="padding: 1.5rem;">
+                        <h4 style="margin-bottom: 1.25rem;">Grade Breakdown</h4>
+                        <div id="gradesContent" class="table-container" style="max-height: 200px; overflow-y: auto;">
+                        </div>
+                    </div>
+                    <div class="card" style="padding: 1.5rem;">
+                        <h4 style="margin-bottom: 1.25rem;">Attendance Registry</h4>
+                        <div id="attendanceContent" class="table-container"
+                            style="max-height: 200px; overflow-y: auto;"></div>
+                    </div>
+                    <div class="card" style="padding: 1.5rem;">
+                        <h4 style="margin-bottom: 1.25rem;">Project Status</h4>
+                        <div id="projectsContent" style="max-height: 200px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+    <script src="../js/api.js"></script>
+
+
+    <script>
+        // Theme toggle logic
+        const storedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', storedTheme);
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            themeBtn.innerHTML = storedTheme === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            themeBtn.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+                themeBtn.innerHTML = next === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            });
+        }
+
+        let selectedStudentId = null;
+        let profileData = null;
+        let performanceChart = null;
+
+        async function searchStudents() {
+            const q = document.getElementById('searchInput').value.trim();
+            if (!q) return;
+            try {
+                const res = await api('hod/students/search?q=' + encodeURIComponent(q));
+                const list = res.students || [];
+                document.getElementById('searchResults').innerHTML = list.length ? list.map(s => `
+                    <div class="card" style="padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; background: var(--bg-primary); border: 1px solid var(--border);">
+                        <div>
+                            <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">${s.name}</div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">${s.register_number || s.email}</div>
+                        </div>
+                        <button class="btn btn-secondary" style="padding: 0.5rem 1rem;" onclick="loadProfile(${s.user_id})">Show Profile</button>
+                    </div>
+                `).join('') : '<p style="color: var(--text-secondary); text-align: center; width: 100%;">No matches found.</p>';
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadProfile(id) {
+            selectedStudentId = id;
+            try {
+                const res = await api('hod/students/' + id);
+                profileData = res;
+                document.getElementById('profileSection').style.display = 'block';
+                document.getElementById('profileContent').innerHTML = `
+                    <h2 style="font-size: 2.5rem; margin-bottom: 0.5rem;">${res.student.name}</h2>
+                    <div style="display: flex; gap: 2rem; color: var(--text-secondary); font-weight: 500;">
+                        <span>🆔 ${res.student.register_number || '—'}</span>
+                        <span><i class="ph ph-envelope"></i> ${res.student.email}</span>
+                    </div>
+                    <div style="margin-top: 1.5rem; display: flex; gap: 3rem;">
+                        <div>
+                            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em;">Performance</div>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-start);">${res.overall_performance || 0}%</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em;">CGPA</div>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-end);">${res.cgpa || 0}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em;">Attendance</div>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: ${res.avg_attendance < 75 ? 'var(--danger)' : 'var(--accent-start)'};">${res.avg_attendance ?? '-'}%</div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('attendanceAlert').style.display = res.attendance_alert ? 'block' : 'none';
+
+                document.getElementById('gradesContent').innerHTML = (res.grades || []).length ? `
+                    <table>
+                        <thead><tr><th>Subject</th><th>Performance</th></tr></thead>
+                        <tbody>${res.grades.map(g => `<tr><td>${g.subject_name || g.subject_code}</td><td><span class="badge ${g.marks_obtained / g.max_marks > 0.6 ? 'badge-success' : 'badge-danger'}">${g.marks_obtained}/${g.max_marks}</span></td></tr>`).join('')}</tbody>
+                    </table>
+                ` : '<p style="padding: 1rem; color: var(--text-secondary);">No grades recorded.</p>';
+
+                document.getElementById('attendanceContent').innerHTML = (res.attendance || []).length ? `
+                    <table>
+                        <thead><tr><th>Code</th><th>Attendance</th></tr></thead>
+                        <tbody>${res.attendance.map(a => `<tr><td>${a.subject_code}</td><td><span style="font-weight: 700; color: ${a.pct < 75 ? 'var(--danger)' : 'var(--accent-start)'}">${a.pct}%</span></td></tr>`).join('')}</tbody>
+                    </table>
+                ` : '<p style="padding: 1rem; color: var(--text-secondary);">No attendance recorded.</p>';
+
+                document.getElementById('projectsContent').innerHTML = (res.projects || []).length ? res.projects.map(p => `
+                    <div style="padding: 1rem; background: var(--bg-primary); border-radius: 8px; border: 1px solid var(--border); margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                        <span style="font-weight: 600;">${p.project_title}</span>
+                        <span style="font-weight: 700; color: var(--accent-end);">${p.marks_obtained || '—'} / ${p.max_marks || 100}</span>
+                    </div>
+                `).join('') : '<p style="padding: 1rem; color: var(--text-secondary);">No project data.</p>';
+
+                if (performanceChart) performanceChart.destroy();
+                if (window.Chart && res.grades && res.grades.length) {
+                    const ctx = document.getElementById('performanceChart').getContext('2d');
+                    performanceChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: res.grades.map(g => g.subject_name || g.subject_code),
+                            datasets: [{
+                                label: 'Subject Score %',
+                                data: res.grades.map(g => (g.marks_obtained / (g.max_marks || 100)) * 100),
+                                backgroundColor: 'hsla(215, 100%, 65%, 0.5)',
+                                borderColor: '#3b82f6',
+                                borderWidth: 2,
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: { y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } }
+                        }
+                    });
+                }
+                document.getElementById('profileSection').scrollIntoView({ behavior: 'smooth' });
+            } catch (e) { console.error(e); }
+        }
+
+        function downloadReport() {
+            if (!profileData || !window.jspdf) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(22);
+            doc.text('Student Performance Report', 20, 20);
+            doc.setFontSize(14);
+            doc.text(`Name: ${profileData.student.name}`, 20, 40);
+            doc.text(`Roll No: ${profileData.student.register_number || 'N/A'}`, 20, 50);
+            doc.text(`GPA: ${profileData.cgpa || '0'}`, 20, 60);
+            doc.text(`Attendance: ${profileData.avg_attendance || '0'}%`, 20, 70);
+            doc.save(`Report_${profileData.student.name}.pdf`);
+        }
+
+        async function logout() { await api('auth/logout', { method: 'POST' }); }
+    </script>
+</body>
+
+</html>

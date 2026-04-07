@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Mentees - Mentor</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .analytics-stat {
+            background: var(--bg-secondary, #1e293b);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .analytics-stat .stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .analytics-stat .stat-label {
+            font-size: 0.78rem;
+            color: var(--text-secondary, #94a3b8);
+            margin-top: 0.25rem;
+        }
+
+        .stat-green {
+            color: #10b981;
+        }
+
+        .stat-red {
+            color: #ef4444;
+        }
+
+        .stat-blue {
+            color: #3b82f6;
+        }
+
+        .stat-amber {
+            color: #f59e0b;
+        }
+    </style>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body class="app-layout">
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">MentorPortal</div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html">
+                <i class="ph ph-chart-bar"></i> Dashboard
+            </a>
+            <a href="students.html" class="active">
+                <i class="ph ph-user"></i>‍<i class="ph ph-graduation-cap"></i> Manage Mentees
+            </a>
+            <a href="feedback.html">
+                <i class="ph ph-chat-circle"></i> View Feedback
+            </a>
+            <div style="margin-top: auto; padding: 1rem 2rem;">
+                <button class="theme-toggle" id="themeToggle"
+                    style="width: 40px; height: 40px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;"><i class="ph ph-moon"></i></button>
+                <a href="../index.html" onclick="event.preventDefault(); logout();"
+                    style="color: var(--danger); padding: 0.5rem 0; display: block; font-weight: 600;">Logout</a>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header style="margin-bottom: 3rem;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Mentorship Registry</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Monitor and manage the academic progression of
+                your assigned mentees.</p>
+        </header>
+
+        <section style="margin-bottom: 3rem;">
+            <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <span><i class="ph ph-users"></i></span> Assigned Mentees
+            </h3>
+            <div id="studentCards" class="cards-grid">
+                <p style="color: var(--text-secondary); text-align: center; padding: 2rem; width: 100%;">Syncing mentee
+                    data...</p>
+            </div>
+        </section>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; margin-bottom: 3rem;">
+            <div class="card" style="padding: 2rem;">
+                <h3 style="margin-bottom: 2rem;">Attendance Overview</h3>
+                <div class="analytics-grid" id="analyticsSummary" style="margin-bottom: 2rem;"></div>
+                <div style="height: 300px;">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+
+            <div id="profileSection" style="display: none;">
+                <div class="card" style="padding: 2rem; border-left: 4px solid var(--accent-start); margin-bottom: 0;">
+                    <div id="profileHeader"></div>
+                    <div id="attendanceAlert" class="badge badge-danger" style="display: none; margin-top: 1rem;"><i class="ph ph-warning"></i> Low
+                        Attendance</div>
+
+                    <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 1.5rem;">
+                        <div>
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h4 style="margin: 0;">Subject Performance</h4>
+                                <button class="btn btn-secondary btn-sm" onclick="openGradeModal()">+ Add Grade</button>
+                            </div>
+                            <div id="gradesContent" class="table-container"
+                                style="max-height: 200px; overflow-y: auto;"></div>
+                        </div>
+
+                        <div>
+                            <h4 style="margin-bottom: 1rem;">Attendance Registry</h4>
+                            <div id="attendanceContent" class="table-container"
+                                style="max-height: 200px; overflow-y: auto;"></div>
+                        </div>
+
+                        <div>
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h4 style="margin: 0;">Project Milestones</h4>
+                                <button class="btn btn-secondary btn-sm" onclick="openProjectModal()">+ Add
+                                    Project</button>
+                            </div>
+                            <div id="projectsContent" style="max-height: 200px; overflow-y: auto;"></div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: end;">
+                            <div style="height: 200px;">
+                                <canvas id="chartCanvas"></canvas>
+                            </div>
+                            <button class="btn btn-primary" onclick="downloadReport()"
+                                style="height: 52px; border-radius: 10px;">Export Report (PDF)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ── MODALS (placed BEFORE the scripts so the DOM is ready) ─────────── -->
+
+    <!-- attendance modal -->
+    <div id="attendanceModal" class="modal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:1000;">
+        <div style="background:var(--bg-card); padding:2rem; border-radius:8px; width:90%; max-width:400px;">
+            <h3>Add Attendance</h3>
+            <form id="modalAttendanceForm">
+                <input type="hidden" name="student_id" id="modalStudentId">
+                <div class="form-group"><input name="subject_code" placeholder="Subject code" required></div>
+                <div class="form-group"><input type="number" name="total_classes" placeholder="Total classes" required
+                        min="1"></div>
+                <div class="form-group"><input type="number" name="attended_classes" placeholder="Attended" required
+                        min="0"></div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="button" class="btn btn-secondary" onclick="closeAttendanceModal()"
+                    style="margin-left:0.5rem;">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- grade modal -->
+    <div id="gradeModal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:1000;">
+        <div style="background:var(--bg-card); padding:2rem; border-radius:8px; width:90%; max-width:420px;">
+            <h3>Add Grade</h3>
+            <form id="gradeModalForm">
+                <input type="hidden" name="student_id" id="gradeStudentId">
+                <div class="form-group"><input name="subject_code" placeholder="Subject code" required></div>
+                <div class="form-group"><input name="subject_name" placeholder="Subject name"></div>
+                <div class="form-group"><input type="number" name="marks_obtained" placeholder="Marks obtained"
+                        required></div>
+                <div class="form-group"><input type="number" name="max_marks" placeholder="Max marks (default 100)">
+                </div>
+                <div class="form-group"><input name="grade" placeholder="Grade (e.g. A+)"></div>
+                <div class="form-group"><input name="semester" placeholder="Semester"></div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="button" class="btn btn-secondary" onclick="closeGradeModal()"
+                    style="margin-left:0.5rem;">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- project modal -->
+    <div id="projectModal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:1000;">
+        <div style="background:var(--bg-card); padding:2rem; border-radius:8px; width:90%; max-width:420px;">
+            <h3>Add Project</h3>
+            <form id="projectModalForm">
+                <input type="hidden" name="student_id" id="projectStudentId">
+                <div class="form-group"><input name="project_title" placeholder="Project title" required></div>
+                <div class="form-group"><input name="project_description" placeholder="Description"></div>
+                <div class="form-group"><input type="number" name="marks_obtained" placeholder="Marks obtained"></div>
+                <div class="form-group"><input type="number" name="max_marks" placeholder="Max marks (default 100)">
+                </div>
+                <div class="form-group"><input name="semester" placeholder="Semester"></div>
+                <div class="form-group">
+                    <select name="status">
+                        <option value="ongoing">Ongoing</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="button" class="btn btn-secondary" onclick="closeProjectModal()"
+                    style="margin-left:0.5rem;">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── SCRIPTS (after all DOM elements) ──────────────────────────────── -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script>
+        // Theme toggle logic
+        const storedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', storedTheme);
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            themeBtn.innerHTML = storedTheme === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            themeBtn.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+                themeBtn.innerHTML = next === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            });
+        }
+
+        (async () => {
+            try {
+                await api('auth/me');
+                loadMentees();
+            } catch (e) { location.href = '../index.html'; }
+        })();
+
+        let selectedStudentId = null;
+        let profileData = null;
+        let profileChart = null;
+        let attendanceChart = null;
+
+        async function loadMentees() {
+            try {
+                const res = await api('mentor/students');
+                const list = res.students || [];
+                const container = document.getElementById('studentCards');
+                if (!list.length) {
+                    container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; width: 100%;">No assigned mentees found.</p>';
+                } else {
+                    container.innerHTML = list.map(s => `
+                        <div class="card student-card" data-student-id="${s.user_id}" style="padding: 1.5rem; transition: transform 0.2s;">
+                            <div style="font-weight: 800; font-size: 1.2rem; margin-bottom: 0.25rem;">${s.name}</div>
+                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">${s.register_number || s.email}</div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">Attendance</div>
+                                <div class="badge ${s.avg_attendance < 75 ? 'badge-danger' : 'badge-success'}" style="font-size: 1rem; padding: 0.4rem 0.8rem;">
+                                    <span class="att-display">${s.avg_attendance || 0}%</span>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                <button class="btn btn-primary" style="padding: 0.6rem;" onclick="loadProfile(${s.user_id})">Profile</button>
+                                <button class="btn btn-secondary" style="padding: 0.6rem;" onclick="openAttendanceModal(${s.user_id})">+ Attendance</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                updateAttendanceChart(list);
+            } catch (e) {
+                console.error('loadMentees error:', e);
+                document.getElementById('studentCards').innerHTML = `<p style="color: var(--danger); text-align: center; width: 100%;">Failed to load mentees.</p>`;
+            }
+        }
+
+        function updateAttendanceChart(students) {
+            const labels = students.map(s => s.name);
+            const data = students.map(s => s.avg_attendance || 0);
+
+            const total = students.length;
+            const below75 = data.filter(v => v < 75).length;
+            const above90 = data.filter(v => v >= 90).length;
+            const avgAll = total ? Math.round(data.reduce((a, b) => a + b, 0) / total) : 0;
+
+            document.getElementById('analyticsSummary').innerHTML = `
+                <div style="padding: 1rem; background: var(--bg-secondary); border-radius: 12px; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-start);">${total}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Total</div>
+                </div>
+                <div style="padding: 1rem; background: var(--bg-secondary); border-radius: 12px; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-end);">${avgAll}%</div>
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Avg</div>
+                </div>
+                <div style="padding: 1rem; background: var(--bg-secondary); border-radius: 12px; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-start);">${above90}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">>90%</div>
+                </div>
+                <div style="padding: 1rem; background: var(--bg-secondary); border-radius: 12px; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--danger);">${below75}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;"><75%</div>
+                </div>
+            `;
+
+            if (attendanceChart) attendanceChart.destroy();
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            attendanceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Attendance %',
+                        data,
+                        backgroundColor: data.map(v => v < 75 ? 'rgba(239, 68, 68, 0.5)' : 'rgba(59, 130, 246, 0.5)'),
+                        borderColor: data.map(v => v < 75 ? '#ef4444' : '#3b82f6'),
+                        borderWidth: 2,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        async function loadProfile(id) {
+            selectedStudentId = id;
+            try {
+                const res = await api('mentor/students/' + id);
+                profileData = res;
+                document.getElementById('profileSection').style.display = 'block';
+                document.getElementById('profileHeader').innerHTML = `
+                    <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">${res.student.name}</h2>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                        ${res.student.email} | ${res.student.register_number || '—'}
+                    </div>
+                    <div style="display: flex; gap: 2rem;">
+                        <div>
+                            <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-secondary);">Score</div>
+                            <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-start);">${res.overall_performance || 0}%</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-secondary);">CGPA</div>
+                            <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-end);">${res.cgpa || 0}</div>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('attendanceAlert').style.display = res.attendance_alert ? 'inline-block' : 'none';
+
+                document.getElementById('gradesContent').innerHTML = (res.grades || []).length ? `
+                    <table>
+                        <thead><tr><th>Subject</th><th>Performance</th></tr></thead>
+                        <tbody>${res.grades.map(g => `<tr><td>${g.subject_name || g.subject_code}</td><td><span class="badge ${g.marks_obtained / g.max_marks > 0.6 ? 'badge-success' : 'badge-danger'}">${g.marks_obtained}/${g.max_marks}</span></td></tr>`).join('')}</tbody>
+                    </table>
+                ` : '<p style="padding: 1rem; color: var(--text-secondary);">No academic data found.</p>';
+
+                document.getElementById('attendanceContent').innerHTML = (res.attendance || []).length ? `
+                    <table>
+                        <thead><tr><th>Subject</th><th>Status</th></tr></thead>
+                        <tbody>${res.attendance.map(a => `<tr><td>${a.subject_code}</td><td><span style="font-weight: 700; color: ${a.pct < 75 ? 'var(--danger)' : 'var(--accent-start)'}">${a.pct}%</span></td></tr>`).join('')}</tbody>
+                    </table>
+                ` : '<p style="padding: 1rem; color: var(--text-secondary);">No attendance logs found.</p>';
+
+                document.getElementById('projectsContent').innerHTML = (res.projects || []).length ? res.projects.map(p => `
+                    <div style="padding: 1rem; background: var(--bg-secondary); border-radius: 10px; border: 1px solid var(--border); margin-bottom: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                            <span style="font-weight: 700;">${p.project_title}</span>
+                            <span class="badge ${p.status === 'completed' ? 'badge-success' : 'badge-warning'}">${p.status}</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--accent-end); font-weight: 600;">Score: ${p.marks_obtained || '—'} / ${p.max_marks || 100}</div>
+                    </div>
+                `).join('') : '<p style="padding: 1rem; color: var(--text-secondary);">No projects initiated.</p>';
+
+                if (window.Chart && res.grades && res.grades.length) {
+                    if (profileChart) profileChart.destroy();
+                    const ctx = document.getElementById('chartCanvas').getContext('2d');
+                    profileChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: res.grades.map(g => g.subject_name || g.subject_code),
+                            datasets: [{
+                                label: 'Marks %',
+                                data: res.grades.map(g => (g.marks_obtained / (g.max_marks || 100)) * 100),
+                                backgroundColor: 'hsla(215, 100%, 65%, 0.3)',
+                                borderColor: '#3b82f6',
+                                borderWidth: 2,
+                                borderRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } }
+                        }
+                    });
+                }
+                document.getElementById('profileSection').scrollIntoView({ behavior: 'smooth' });
+            } catch (e) { console.error(e); }
+        }
+
+        function downloadReport() {
+            if (!profileData || !window.jspdf) return;
+            const doc = new window.jspdf.jsPDF();
+            doc.setFontSize(20);
+            doc.text('Mentee Progression Report', 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Student: ${profileData.student.name}`, 20, 35);
+            doc.text(`ID: ${profileData.student.register_number || profileData.student.email}`, 20, 42);
+            doc.text(`Performance: ${profileData.overall_performance || 0}%`, 20, 52);
+            doc.text(`CGPA: ${profileData.cgpa || 0}`, 20, 59);
+            doc.text(`Avg Attendance: ${profileData.avg_attendance || 0}%`, 20, 66);
+            doc.save(`Mentee_Report_${profileData.student.name}.pdf`);
+        }
+
+        async function logout() {
+            try { await api('auth/logout', { method: 'POST' }); } catch (e) { }
+            location.href = '../index.html';
+        }
+
+        function openAttendanceModal(id) {
+            document.getElementById('modalStudentId').value = id;
+            document.getElementById('attendanceModal').style.display = 'flex';
+        }
+        function closeAttendanceModal() {
+            document.getElementById('attendanceModal').style.display = 'none';
+            document.getElementById('modalAttendanceForm').reset();
+        }
+        document.getElementById('modalAttendanceForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            try {
+                const payload = Object.fromEntries(new FormData(this));
+                if (Number(payload.attended_classes) > Number(payload.total_classes)) {
+                    alert('Error: Attended classes exceeds total.');
+                    return;
+                }
+                await api('mentor/attendance', { method: 'POST', body: JSON.stringify(payload) });
+                closeAttendanceModal();
+                loadMentees();
+            } catch (err) {
+                alert('Successive integration failed: ' + err.message);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        function openGradeModal() {
+            if (!selectedStudentId) return;
+            document.getElementById('gradeStudentId').value = selectedStudentId;
+            document.getElementById('gradeModal').style.display = 'flex';
+        }
+        function closeGradeModal() {
+            document.getElementById('gradeModal').style.display = 'none';
+            document.getElementById('gradeModalForm').reset();
+        }
+        document.getElementById('gradeModalForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            try {
+                const data = Object.fromEntries(new FormData(this));
+                await api('mentor/grades', { method: 'POST', body: JSON.stringify(data) });
+                closeGradeModal();
+                loadProfile(selectedStudentId);
+            } catch (err) { alert(err.message); }
+        });
+
+        function openProjectModal() {
+            if (!selectedStudentId) return;
+            document.getElementById('projectStudentId').value = selectedStudentId;
+            document.getElementById('projectModal').style.display = 'flex';
+        }
+        function closeProjectModal() {
+            document.getElementById('projectModal').style.display = 'none';
+            document.getElementById('projectModalForm').reset();
+        }
+        document.getElementById('projectModalForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            try {
+                const data = Object.fromEntries(new FormData(this));
+                await api('mentor/projects', { method: 'POST', body: JSON.stringify(data) });
+                closeProjectModal();
+                loadProfile(selectedStudentId);
+            } catch (err) { alert(err.message); }
+        });
+    </script>
+</body>
+
+</html>

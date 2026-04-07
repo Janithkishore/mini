@@ -1,56 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Mentorship Feedback System</title>
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
+
 <body>
-    <div class="auth-page">
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <header class="site-header">
+        <div class="container header-inner">
+            <div class="brand">Mentorship<span class="brand-accent">Hub</span></div>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"><i class="ph ph-moon"></i></button>
+        </div>
+    </header>
+
+    <main class="auth-page">
         <div class="auth-card card">
-            <h1 style="text-align: center; margin-bottom: 1.5rem;">Create Account</h1>
+            <h1 class="auth-title">Create Account</h1>
+            <p class="auth-subtitle">Join the mentorship community</p>
+
+            <div id="msg" class="alert" style="display: none;"></div>
+
             <form id="registerForm">
-                <div class="form-group">
-                    <label for="name">Full Name</label>
-                    <input type="text" id="name" name="name" required>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" name="name" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required placeholder="john@college.edu">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required placeholder="••••••••">
+                    </div>
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <select id="role" name="role" required>
+                            <option value="student">Student</option>
+                            <option value="mentor">Mentor</option>
+                            <option value="hod">HOD</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                <div class="form-group">
-                    <label for="role">Role</label>
-                    <select id="role" name="role" required>
-                        <option value="student">Student</option>
-                        <option value="mentor">Mentor</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
+
                 <div class="form-group" id="regNumGroup">
                     <label for="register_number">Register Number</label>
-                    <input type="text" id="register_number" name="register_number" placeholder="Required for students">
+                    <input type="text" id="register_number" name="register_number"
+                        placeholder="Enter your official register number">
                 </div>
+
                 <div class="form-group">
                     <label for="department">Department</label>
-                    <input type="text" id="department" name="department">
+                    <input type="text" id="department" name="department" placeholder="e.g. Computer Science">
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Register</button>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    Register Now
+                </button>
             </form>
-            <p style="text-align: center; margin-top: 1.5rem;">
-                Already have an account? <a href="index.html">Login</a>
-            </p>
-            <div id="msg" class="alert" style="display: none; margin-top: 1rem;"></div>
+            <p class="auth-register">Already have an account? <a href="index.html">Sign In</a></p>
         </div>
-    </div>
+    </main>
     <script src="js/api.js"></script>
     <script>
-        document.getElementById('role').addEventListener('change', function() {
+        // Theme toggle logic
+        const storedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', storedTheme);
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            themeBtn.innerHTML = storedTheme === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            themeBtn.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+                themeBtn.innerHTML = next === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            });
+        }
+
+        document.getElementById('role').addEventListener('change', function () {
             document.getElementById('regNumGroup').style.display = this.value === 'student' ? 'block' : 'none';
         });
         document.getElementById('regNumGroup').style.display = 'block';
@@ -81,4 +125,5 @@
         });
     </script>
 </body>
+
 </html>

@@ -14,6 +14,7 @@ const feedbackRoutes = require('./routes/feedbackRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const mentorRoutes = require('./routes/mentorRoutes');
+const hodRoutes = require('./routes/hodRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,6 +34,7 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/mentor', mentorRoutes);
+app.use('/api/hod', hodRoutes);
 
 // SPA fallback
 app.get('*', (req, res) => {

@@ -21,6 +21,7 @@ async function getQuestions(req, res) {
 // Submit feedback (student)
 async function submitFeedback(req, res) {
     try {
+        console.log('Submitting feedback...');
         const studentId = req.session.user.id;
         const { mentor_id, answers, comment } = req.body;
 
@@ -58,6 +59,7 @@ async function submitFeedback(req, res) {
 
         res.status(201).json({ message: 'Feedback submitted successfully.' });
     } catch (err) {
+        
         if (err.message && err.message.includes('UNIQUE constraint failed')) {
             return res.status(400).json({ error: 'Duplicate feedback. You have already submitted feedback for this mentor.' });
         }

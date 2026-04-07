@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentor Performance - HOD</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body class="app-layout">
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">HODPortal</div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html">
+                <i class="ph ph-chart-bar"></i> Dashboard
+            </a>
+            <a href="mentors.html" class="active">
+                <i class="ph ph-chalkboard-teacher"></i> Mentors
+            </a>
+            <a href="students.html">
+                <i class="ph ph-graduation-cap"></i> Students
+            </a>
+            <a href="assignments.html">
+                <i class="ph ph-target"></i> Assignments
+            </a>
+            <a href="reports.html">
+                <i class="ph ph-clipboard-text"></i> Reports
+            </a>
+            <a href="questions.html">
+                <i class="ph ph-question"></i> Questions
+            </a>
+            <div style="margin-top: auto; padding: 1rem 2rem;">
+                <button class="theme-toggle" id="themeToggle"
+                    style="width: 40px; height: 40px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;"><i class="ph ph-moon"></i></button>
+                <a href="../index.html" onclick="logout()"
+                    style="color: var(--danger); padding: 0.5rem 0; display: block; font-weight: 600;">Logout</a>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header style="margin-bottom: 3rem;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Mentor Monitoring</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Track mentor ratings, consistency, and feedback
+                trends.</p>
+        </header>
+
+        <div class="card" style="padding: 2rem;">
+            <h3 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                <span><i class="ph ph-chart-bar"></i></span> Inter-Mentor Comparison
+            </h3>
+            <div style="height: 300px;">
+                <canvas id="comparisonChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 2rem;">Mentor Roster</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mentor</th>
+                            <th>Department</th>
+                            <th>Avg Rating</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mentorList"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mentor Profile Modal -->
+        <div id="profileModal" class="modal-backdrop"
+            style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center;">
+            <div class="card"
+                style="width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; margin: 0; padding: 2.5rem; border: 1px solid var(--border);">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+                    <div id="mentorProfileContent"></div>
+                    <button class="btn btn-secondary" style="padding: 0.5rem 1rem;"
+                        onclick="document.getElementById('profileModal').style.display='none'">✕</button>
+                </div>
+                <div style="height: 300px; margin-bottom: 2rem;">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="../js/api.js"></script>
+
+
+    <script>
+        // Theme toggle logic
+        const storedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', storedTheme);
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            themeBtn.innerHTML = storedTheme === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            themeBtn.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+                themeBtn.innerHTML = next === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            });
+        }
+
+        let comparisonChart = null;
+        let trendChart = null;
+
+        function getPerformanceColor(rating) {
+            if (rating >= 4) return '#10b981';
+            if (rating >= 3) return '#f59e0b';
+            return '#ef4444';
+        }
+
+        async function loadComparison() {
+            try {
+                const res = await api('hod/mentors/comparison');
+                const m = res.mentors || [];
+
+                if (comparisonChart) comparisonChart.destroy();
+
+                comparisonChart = new Chart(document.getElementById('comparisonChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: m.map(x => x.name),
+                        datasets: [{
+                            label: 'Avg Rating',
+                            data: m.map(x => x.avg_rating || 0),
+                            backgroundColor: m.map(x => getPerformanceColor(x.avg_rating || 0)),
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, max: 5 } }
+                    }
+                });
+
+                document.getElementById('mentorList').innerHTML = m.map(x => `
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600;">${x.name}</div>
+                        </td>
+                        <td>${x.department}</td>
+                        <td>
+                            <span class="badge ${x.avg_rating >= 4 ? 'badge-success' : (x.avg_rating >= 3 ? 'badge-warning' : 'badge-danger')}">
+                                ${x.avg_rating || '—'} / 5
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="loadMentorProfile(${x.mentor_id})">Analytic View</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadMentorProfile(id) {
+            try {
+                const res = await api('hod/mentors/' + id + '/profile');
+                document.getElementById('profileModal').style.display = 'flex';
+
+                document.getElementById('mentorProfileContent').innerHTML = `
+                    <div>
+                        <h2 style="margin: 0 font-size: 2rem;">${res.mentor.name}</h2>
+                        <div style="margin-top: 0.5rem; display: flex; gap: 1rem; color: var(--text-secondary);">
+                            <span><i class="ph ph-users"></i> ${res.total_students_assigned} Students</span>
+                            <span><i class="ph ph-star"></i> ${res.average_rating || '—'} Avg Rating</span>
+                        </div>
+                    </div>
+                `;
+
+                if (trendChart) trendChart.destroy();
+
+                if (res.feedback_trends && res.feedback_trends.length) {
+                    const ctx = document.getElementById('trendChart').getContext('2d');
+                    trendChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: res.feedback_trends.map(t => t.date),
+                            datasets: [{
+                                label: 'Rating Progression',
+                                data: res.feedback_trends.map(t => t.avg_rating),
+                                borderColor: '#8b5cf6',
+                                backgroundColor: 'hsla(265, 100%, 70%, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#8b5cf6',
+                                pointRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: { y: { min: 0, max: 5 } }
+                        }
+                    });
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function logout() { await api('auth/logout', { method: 'POST' }); }
+        loadComparison();
+    </script>
+</body>
+
+</html>

@@ -1,55 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mentor Dashboard - Mentorship Feedback System</title>
     <link rel="stylesheet" href="../css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
+
 <body class="app-layout">
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
     <aside class="sidebar">
-        <div class="sidebar-logo">Mentor Portal</div>
+        <div class="sidebar-logo">MentorPortal</div>
         <nav class="sidebar-nav">
-            <a href="dashboard.html" class="active">Dashboard</a>
-            <a href="feedback.html">View Feedback</a>
-            <a href="../index.html" onclick="event.preventDefault(); logout();">Logout</a>
+            <a href="dashboard.html" class="active">
+                <i class="ph ph-chart-bar"></i> Dashboard
+            </a>
+            <a href="students.html">
+                <i class="ph ph-user"></i>‍<i class="ph ph-graduation-cap"></i> Manage Mentees
+            </a>
+            <a href="feedback.html">
+                <i class="ph ph-chat-circle"></i> View Feedback
+            </a>
+            <div style="margin-top: auto; padding: 1rem 2rem;">
+                <button class="theme-toggle" id="themeToggle"
+                    style="width: 40px; height: 40px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;"><i class="ph ph-moon"></i></button>
+                <a href="../index.html" onclick="event.preventDefault(); logout();"
+                    style="color: var(--danger); padding: 0.5rem 0; display: block; font-weight: 600;">Logout</a>
+            </div>
         </nav>
     </aside>
-    <main class="main-content">
-        <h1>Welcome, <span id="userName">Mentor</span></h1>
-        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Mentor Dashboard</p>
 
-        <div class="stats-grid">
+    <main class="main-content">
+        <header style="margin-bottom: 3rem;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Welcome back, <span id="userName"
+                    style="color: var(--accent-start);">Mentor</span></h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Here's what's happening with your mentees today.
+            </p>
+        </header>
+
+        <div class="stats-grid" style="margin-bottom: 3rem;">
             <div class="stat-card">
                 <div class="value" id="avgRating">—</div>
-                <div class="label">Average Rating</div>
+                <div class="label">Qualitative Score</div>
+                <div style="position: absolute; right: 1rem; top: 1rem; font-size: 1.5rem; opacity: 0.2;"><i class="ph ph-star"></i></div>
             </div>
             <div class="stat-card">
                 <div class="value" id="totalResponses">0</div>
-                <div class="label">Total Responses</div>
+                <div class="label">Total Feedback</div>
+                <div style="position: absolute; right: 1rem; top: 1rem; font-size: 1.5rem; opacity: 0.2;"><i class="ph ph-chat-circle"></i></div>
             </div>
             <div class="stat-card">
                 <div class="value" id="studentsCount">0</div>
-                <div class="label">Assigned Students</div>
+                <div class="label">Assigned Mentees</div>
+                <div style="position: absolute; right: 1rem; top: 1rem; font-size: 1.5rem; opacity: 0.2;"><i class="ph ph-user"></i></div>
             </div>
         </div>
 
-        <div class="card">
-            <h3 class="card-title">Assigned Students</h3>
-            <div id="studentsList">
-                <p style="color: var(--text-secondary);">Loading...</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div class="card" style="padding: 2rem;">
+                <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span><i class="ph ph-user"></i>‍<i class="ph ph-graduation-cap"></i></span> Assigned Mentees
+                </h3>
+                <div id="studentsList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <p style="color: var(--text-secondary); text-align: center; padding: 1rem;">Loading registry...</p>
+                </div>
             </div>
-        </div>
-        <div class="card">
-            <h3 class="card-title">Recent Feedback</h3>
-            <div id="feedbackList">
-                <p style="color: var(--text-secondary);">Loading...</p>
+
+            <div class="card" style="padding: 2rem;">
+                <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span><i class="ph ph-chat-circle"></i></span> Recent Feedback
+                </h3>
+                <div id="feedbackList" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <p style="color: var(--text-secondary); text-align: center; padding: 1rem;">Retrieving feedback...
+                    </p>
+                </div>
             </div>
         </div>
     </main>
     <script src="../js/api.js"></script>
     <script>
+        // Theme toggle logic
+        const storedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', storedTheme);
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            themeBtn.innerHTML = storedTheme === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            themeBtn.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+                themeBtn.innerHTML = next === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            });
+        }
+
         async function loadData() {
             try {
                 const [analytics, students, feedback] = await Promise.all([
@@ -60,19 +112,34 @@
                 document.getElementById('avgRating').textContent = analytics.average_rating || '—';
                 document.getElementById('totalResponses').textContent = analytics.total_responses || 0;
                 document.getElementById('studentsCount').textContent = (students.students || []).length;
+
                 const sl = document.getElementById('studentsList');
-                sl.innerHTML = (students.students || []).length ? (students.students || []).map(s =>
-                    `<p><strong>${s.name}</strong> — ${s.register_number || s.email}</p>`
-                ).join('') : '<p style="color: var(--text-secondary);">No students assigned.</p>';
+                sl.innerHTML = (students.students || []).length ? (students.students || []).map(s => `
+                    <div style="padding: 1rem; background: var(--bg-primary); border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 700;">${s.name}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">${s.register_number || s.email}</div>
+                        </div>
+                        <a href="students.html" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Manage</a>
+                    </div>
+                `).join('') : '<p style="color: var(--text-secondary); text-align: center;">No students assigned yet.</p>';
+
                 const fl = document.getElementById('feedbackList');
                 const fb = feedback.feedback || [];
-                fl.innerHTML = fb.length ? fb.slice(0, 5).map(f =>
-                    `<p><strong>${f.student_name}</strong>: ${f.question_text} → ${f.response_value}</p>`
-                ).join('') : '<p style="color: var(--text-secondary);">No feedback yet.</p>';
+                fl.innerHTML = fb.length ? fb.slice(0, 5).map(f => `
+                    <div style="padding: 1rem; border-left: 3px solid var(--accent-start); background: var(--bg-primary); border-radius: 4px 10px 10px 4px; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 700;">${f.student_name}</span>
+                            <span class="badge ${f.response_value >= 4 ? 'badge-success' : 'badge-warning'}">${f.response_value}/5</span>
+                        </div>
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">${f.question_text}</div>
+                    </div>
+                `).join('') : '<p style="color: var(--text-secondary); text-align: center;">No feedback notifications.</p>';
             } catch (e) {
                 console.error(e);
             }
         }
+
         (async () => {
             try {
                 const res = await api('auth/me');
@@ -80,7 +147,14 @@
             } catch (e) { location.href = '../index.html'; }
             loadData();
         })();
-        async function logout() { try { await api('auth/logout', { method: 'POST' }); } catch (e) {} location.href = '../index.html'; }
+
+        async function logout() {
+            try {
+                await api('auth/logout', { method: 'POST' });
+            } catch (e) { }
+            location.href = '../index.html';
+        }
     </script>
 </body>
+
 </html>

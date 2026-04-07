@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    role TEXT NOT NULL CHECK(role IN ('admin', 'student', 'mentor')),
+    role TEXT NOT NULL CHECK(role IN ('admin', 'student', 'mentor', 'hod')),
     department TEXT,
     register_number TEXT UNIQUE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS assignments (
 -- ========== FEEDBACK QUESTIONS ==========
 CREATE TABLE IF NOT EXISTS feedback_questions (
     question_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    question_text TEXT NOT NULL,
+    question_text TEXT NOT NULL UNIQUE,
     question_type TEXT NOT NULL CHECK(question_type IN ('rating', 'text', 'yes-no')),
     is_active INTEGER DEFAULT 1 CHECK(is_active IN (0, 1)),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP

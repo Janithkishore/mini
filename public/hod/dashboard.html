@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOD Dashboard - Mentorship Feedback & Academic Monitoring</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body class="app-layout">
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">HODPortal</div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="active">
+                <i class="ph ph-chart-bar"></i> Dashboard
+            </a>
+            <a href="mentors.html">
+                <i class="ph ph-chalkboard-teacher"></i> Mentors
+            </a>
+            <a href="students.html">
+                <i class="ph ph-graduation-cap"></i> Students
+            </a>
+            <a href="assignments.html">
+                <i class="ph ph-target"></i> Assignments
+            </a>
+            <a href="reports.html">
+                <i class="ph ph-clipboard-text"></i> Reports
+            </a>
+            <a href="questions.html">
+                <i class="ph ph-question"></i> Questions
+            </a>
+            <div style="margin-top: auto; padding: 1rem 2rem;">
+                <button class="theme-toggle" id="themeToggle"
+                    style="width: 40px; height: 40px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;"><i class="ph ph-moon"></i></button>
+                <a href="../index.html" onclick="logout()"
+                    style="color: var(--danger); padding: 0.5rem 0; display: block; font-weight: 600;">Logout</a>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header style="margin-bottom: 3rem;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">HOD Dashboard</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Mentorship Feedback & Academic Monitoring System
+            </p>
+        </header>
+
+        <div class="stats-grid" style="margin-bottom: 2.5rem;">
+            <div class="card"
+                style="margin-bottom: 0; padding: 1.5rem; display: flex; align-items: center; gap: 1.5rem;">
+                <div
+                    style="width: 60px; height: 60px; background: hsla(215, 100%, 70%, 0.1); color: #3b82f6; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                    <i class="ph ph-graduation-cap"></i></div>
+                <div>
+                    <div style="font-size: 2rem; font-weight: 700; line-height: 1;" id="totalStudents">0</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.25rem;">Total Students
+                    </div>
+                </div>
+            </div>
+            <div class="card"
+                style="margin-bottom: 0; padding: 1.5rem; display: flex; align-items: center; gap: 1.5rem;">
+                <div
+                    style="width: 60px; height: 60px; background: hsla(265, 100%, 70%, 0.1); color: var(--accent-start); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                    <i class="ph ph-chalkboard-teacher"></i></div>
+                <div>
+                    <div style="font-size: 2rem; font-weight: 700; line-height: 1;" id="totalMentors">0</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.25rem;">Total Mentors
+                    </div>
+                </div>
+            </div>
+            <div class="card"
+                style="margin-bottom: 0; padding: 1.5rem; display: flex; align-items: center; gap: 1.5rem;">
+                <div
+                    style="width: 60px; height: 60px; background: hsla(160, 84%, 39%, 0.1); color: #10b981; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                    <i class="ph ph-trend-up"></i></div>
+                <div>
+                    <div style="font-size: 2rem; font-weight: 700; line-height: 1;" id="avgPerformance">0%</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.25rem;">Avg Performance
+                    </div>
+                </div>
+            </div>
+            <div class="card"
+                style="margin-bottom: 0; padding: 1.5rem; display: flex; align-items: center; gap: 1.5rem;">
+                <div
+                    style="width: 60px; height: 60px; background: hsla(45, 100%, 50%, 0.1); color: #f59e0b; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                    <i class="ph ph-star"></i></div>
+                <div>
+                    <div style="font-size: 2rem; font-weight: 700; line-height: 1;" id="avgRating">0</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.25rem;">Avg Mentor Rating
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <div class="card" style="margin-bottom: 0;">
+                <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="color: var(--accent-start);">🎖️</span> Top 5 Mentors
+                </h3>
+                <div id="topMentors" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <p style="color: var(--text-secondary);">Loading top mentors...</p>
+                </div>
+            </div>
+            <div class="card" style="margin-bottom: 0;">
+                <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="color: var(--danger);"><i class="ph ph-warning"></i></span> Attendance Alerts
+                </h3>
+                <div id="lowAttendance" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <p style="color: var(--text-secondary);">Scanning for alerts...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 2rem;">Departmental Performance Trends</h3>
+            <div style="height: 350px;">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="../js/api.js"></script>
+
+
+    <script>
+        // Theme toggle logic
+        const storedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', storedTheme);
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            themeBtn.innerHTML = storedTheme === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            themeBtn.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+                themeBtn.innerHTML = next === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            });
+        }
+
+        let chart = null;
+        async function loadDashboard() {
+            try {
+                const res = await api('hod/dashboard');
+                document.getElementById('totalStudents').textContent = res.total_students || 0;
+                document.getElementById('totalMentors').textContent = res.total_mentors || 0;
+                document.getElementById('avgPerformance').textContent = (res.avg_student_performance || 0) + '%';
+                document.getElementById('avgRating').textContent = res.avg_mentor_rating || '—';
+
+                const tm = document.getElementById('topMentors');
+                const top = res.top_mentors || [];
+                tm.innerHTML = top.length ? top.map((m, i) => `
+                    <div style="padding: 1rem; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-weight: 700; color: var(--accent-start); width: 24px;">#${i + 1}</span>
+                            <span style="font-weight: 600;">${m.name}</span>
+                        </div>
+                        <div style="font-weight: 700; color: var(--accent-end);">${m.avg_rating || '—'} <i class="ph ph-star"></i></div>
+                    </div>
+                `).join('') : '<p style="color: var(--text-secondary); text-align: center; padding: 1rem;">No mentor data yet.</p>';
+
+                const la = document.getElementById('lowAttendance');
+                const low = res.low_attendance_students || [];
+                la.innerHTML = low.length ? low.map(s => `
+                    <div style="padding: 1rem; background: hsla(0, 100%, 70%, 0.1); border: 1px solid hsla(0, 100%, 70%, 0.2); border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600;">${s.name}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">${s.subject_code}</div>
+                        </div>
+                        <div style="font-weight: 700; color: var(--danger);">${s.pct}%</div>
+                    </div>
+                `).join('') : '<div style="padding: 1rem; background: hsla(160, 100%, 40%, 0.1); color: #10b981; border-radius: 12px; text-align: center; border: 1px solid hsla(160, 100%, 40%, 0.2);">No attendance alerts!</div>';
+
+                if (chart) chart.destroy();
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Students', 'Mentors', 'Avg Perf %', 'Avg Rating x20'],
+                        datasets: [{
+                            label: 'Metrics',
+                            data: [
+                                res.total_students || 0,
+                                res.total_mentors || 0,
+                                res.avg_student_performance || 0,
+                                (res.avg_mentor_rating || 0) * 20
+                            ],
+                            backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b'],
+                            borderRadius: 12,
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.8)',
+                                padding: 12,
+                                titleFont: { size: 14, weight: 'bold' },
+                                bodyFont: { size: 13 }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255,255,255,0.05)' },
+                                ticks: { color: 'rgba(255,255,255,0.5)' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: 'rgba(255,255,255,0.7)', font: { weight: '600' } }
+                            }
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        async function logout() { await api('auth/logout', { method: 'POST' }); }
+        loadDashboard();
+    </script>
+</body>
+
+</html>

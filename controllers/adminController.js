@@ -4,6 +4,7 @@
  */
 
 const db = require('../database/db');
+const bcrypt = require('bcryptjs');
 
 // ========== DASHBOARD STATS ==========
 async function getDashboardStats(req, res) {
@@ -73,10 +74,13 @@ async function getUsers(req, res) {
 // ========== MENTORS ==========
 async function getMentors(req, res) {
     try {
+        // Get mentors based on role, and join with mentors table for additional info if available
         const mentors = await db.allAsync(`
-            SELECT m.mentor_id, m.user_id, u.name, u.email, m.department, m.experience_years, m.specialization
-            FROM mentors m
-            JOIN users u ON m.user_id = u.user_id
+            SELECT u.user_id, u.name, u.email, u.department, u.register_number,
+                   m.mentor_id, m.experience_years, m.specialization
+            FROM users u
+            LEFT JOIN mentors m ON u.user_id = m.user_id
+            WHERE u.role = 'mentor'
         `);
         res.json({ mentors });
     } catch (err) {
@@ -85,21 +89,99 @@ async function getMentors(req, res) {
     }
 }
 
-// ========== ASSIGNMENTS ==========
-async function assignMentor(req, res) {
+async function createMentor(req, res) {
     try {
-        const { mentor_id, student_id } = req.body;
-        if (!mentor_id || !student_id) {
-            return res.status(400).json({ error: 'Mentor ID and student ID required.' });
+        const { name, email, password, department, register_number, experience_years, specialization } = req.body;
+        if (!name || !email || !password || !department) {
+            return res.status(400).json({ error: 'Name, email, password, and department are required.' });
         }
-        await db.runAsync('INSERT OR REPLACE INTO assignments (mentor_id, student_id) VALUES (?, ?)', [mentor_id, student_id]);
-        res.status(201).json({ message: 'Mentor assigned successfully.' });
+        // Check if email or register_number already exists
+        const existing = await db.getAsync('SELECT user_id FROM users WHERE email = ? OR register_number = ?', [email, register_number]);
+        if (existing) {
+            return res.status(400).json({ error: 'Email or register number already exists.' });
+        }
+        // Insert user
+        const userResult = await db.runAsync(
+            'INSERT INTO users (name, email, password, role, department, register_number) VALUES (?, ?, ?, ?, ?, ?)',
+            [name, email, await bcrypt.hash(password, 10), 'mentor', department, register_number]
+        );
+        const userId = userResult.lastID;
+        // Insert mentor
+        await db.runAsync(
+            'INSERT INTO mentors (user_id, department, experience_years, specialization) VALUES (?, ?, ?, ?)',
+            [userId, department, experience_years || 0, specialization || '']
+        );
+        res.status(201).json({ message: 'Mentor created successfully.', mentor_id: userResult.lastID });
     } catch (err) {
-        if (err.message && err.message.includes('FOREIGN KEY')) {
-            return res.status(400).json({ error: 'Invalid mentor or student.' });
-        }
         console.error(err);
-        res.status(500).json({ error: 'Assignment failed.' });
+        res.status(500).json({ error: 'Failed to create mentor.' });
+    }
+}
+
+async function updateMentor(req, res) {
+    try {
+        const { id } = req.params;
+        const { name, email, department, register_number, experience_years, specialization } = req.body;
+        // Get mentor
+        const mentor = await db.getAsync('SELECT m.mentor_id, u.user_id FROM mentors m JOIN users u ON m.user_id = u.user_id WHERE m.mentor_id = ?', [id]);
+        if (!mentor) return res.status(404).json({ error: 'Mentor not found.' });
+        // Update user
+        await db.runAsync(
+            'UPDATE users SET name = ?, email = ?, department = ?, register_number = ? WHERE user_id = ?',
+            [name, email, department, register_number, mentor.user_id]
+        );
+        // Update mentor
+        await db.runAsync(
+            'UPDATE mentors SET department = ?, experience_years = ?, specialization = ? WHERE mentor_id = ?',
+            [department, experience_years || 0, specialization || '', id]
+        );
+        res.json({ message: 'Mentor updated successfully.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to update mentor.' });
+    }
+}
+
+async function deleteMentor(req, res) {
+    try {
+        const { id } = req.params;
+        // Get mentor
+        const mentor = await db.getAsync('SELECT user_id FROM mentors WHERE mentor_id = ?', [id]);
+        if (!mentor) return res.status(404).json({ error: 'Mentor not found.' });
+        // Delete mentor (CASCADE will handle if needed, but since assignments reference mentor_id, they will be deleted)
+        await db.runAsync('DELETE FROM mentors WHERE mentor_id = ?', [id]);
+        // Update user role to null or something
+        await db.runAsync('UPDATE users SET role = NULL WHERE user_id = ?', [mentor.user_id]);
+        res.json({ message: 'Mentor deleted successfully.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete mentor.' });
+    }
+}
+
+// ========== ASSIGNMENTS ==========
+async function getAssignments(req, res) {
+    try {
+        const assignments = await db.allAsync(`
+            SELECT 
+                a.assignment_id,
+                a.assigned_at,
+                m.mentor_id,
+                u_mentor.name as mentor_name,
+                u_mentor.department as mentor_department,
+                u_student.user_id as student_id,
+                u_student.name as student_name,
+                u_student.register_number
+            FROM assignments a
+            JOIN mentors m ON a.mentor_id = m.mentor_id
+            JOIN users u_mentor ON m.user_id = u_mentor.user_id
+            JOIN users u_student ON a.student_id = u_student.user_id
+            ORDER BY u_mentor.name, u_student.name
+        `);
+        res.json({ assignments });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to load assignments.' });
     }
 }
 
@@ -273,64 +355,13 @@ async function getMentorComparison(req, res) {
     }
 }
 
-// ========== ATTENDANCE, GRADES, PROJECTS (Admin CRUD) ==========
-async function addAttendance(req, res) {
-    try {
-        const { student_id, subject_code, total_classes, attended_classes, semester, academic_year } = req.body;
-        if (!student_id || !subject_code || total_classes == null || attended_classes == null) {
-            return res.status(400).json({ error: 'Missing required fields.' });
-        }
-        await db.runAsync(`
-            INSERT OR REPLACE INTO attendance (student_id, subject_code, total_classes, attended_classes, semester, academic_year)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `, [student_id, subject_code, total_classes, attended_classes, semester || null, academic_year || null]);
-        res.status(201).json({ message: 'Attendance recorded.' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to add attendance.' });
-    }
-}
-
-async function addGrade(req, res) {
-    try {
-        const { student_id, subject_code, subject_name, marks_obtained, max_marks, grade, semester, academic_year } = req.body;
-        if (!student_id || !subject_code || marks_obtained == null) {
-            return res.status(400).json({ error: 'Missing required fields.' });
-        }
-        await db.runAsync(`
-            INSERT INTO grades (student_id, subject_code, subject_name, marks_obtained, max_marks, grade, semester, academic_year)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `, [student_id, subject_code, subject_name || null, marks_obtained, max_marks || 100, grade || null, semester || null, academic_year || null]);
-        res.status(201).json({ message: 'Grade added.' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to add grade.' });
-    }
-}
-
-async function addProject(req, res) {
-    try {
-        const { student_id, project_title, project_description, marks_obtained, max_marks, semester, status } = req.body;
-        if (!student_id || !project_title) {
-            return res.status(400).json({ error: 'Student ID and project title required.' });
-        }
-        await db.runAsync(`
-            INSERT INTO projects (student_id, project_title, project_description, marks_obtained, max_marks, semester, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `, [student_id, project_title, project_description || null, marks_obtained || null, max_marks || 100, semester || null, status || 'ongoing']);
-        res.status(201).json({ message: 'Project added.' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to add project.' });
-    }
-}
-
 // ========== REPORTS ==========
 async function getReports(req, res) {
     try {
         const reports = await db.allAsync(`
-            SELECT fr.response_id, fr.submitted_at, u_s.name as student_name, u_m.name as mentor_name,
-                   fq.question_text, fr.response_value, fr.comment
+            SELECT fr.response_id, fr.submitted_at, u_s.user_id as student_id, u_s.name as student_name, 
+                   m.mentor_id, u_m.name as mentor_name, m.department as mentor_department,
+                   fq.question_type, fq.question_text, fr.response_value, fr.comment
             FROM feedback_responses fr
             JOIN users u_s ON fr.student_id = u_s.user_id
             JOIN mentors m ON fr.mentor_id = m.mentor_id
@@ -349,15 +380,15 @@ module.exports = {
     getDashboardStats,
     getUsers,
     getMentors,
-    assignMentor,
+    createMentor,
+    updateMentor,
+    deleteMentor,
+    getAssignments,
     getQuestions,
     createQuestion,
     searchStudents,
     getStudentProfile,
     getMentorProfile,
     getMentorComparison,
-    addAttendance,
-    addGrade,
-    addProject,
     getReports
 };

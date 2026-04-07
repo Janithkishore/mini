@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questions - HOD</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body class="app-layout">
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">HODPortal</div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html">
+                <i class="ph ph-chart-bar"></i> Dashboard
+            </a>
+            <a href="mentors.html">
+                <i class="ph ph-chalkboard-teacher"></i> Mentors
+            </a>
+            <a href="students.html">
+                <i class="ph ph-graduation-cap"></i> Students
+            </a>
+            <a href="assignments.html">
+                <i class="ph ph-target"></i> Assignments
+            </a>
+            <a href="reports.html">
+                <i class="ph ph-clipboard-text"></i> Reports
+            </a>
+            <a href="questions.html" class="active">
+                <i class="ph ph-question"></i> Questions
+            </a>
+            <div style="margin-top: auto; padding: 1rem 2rem;">
+                <button class="theme-toggle" id="themeToggle"
+                    style="width: 40px; height: 40px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;"><i class="ph ph-moon"></i></button>
+                <a href="../index.html" onclick="logout()"
+                    style="color: var(--danger); padding: 0.5rem 0; display: block; font-weight: 600;">Logout</a>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header style="margin-bottom: 3rem;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Questionnaire Forge</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Construct and manage the evaluative framework
+                for feedback.</p>
+        </header>
+
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; align-items: start;">
+            <div class="card" style="padding: 2.5rem;">
+                <h3 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span>✨</span> Craft New Question
+                </h3>
+                <form id="questionForm">
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label style="font-weight: 600; margin-bottom: 0.75rem; display: block;">Enquiry Text</label>
+                        <input type="text" name="question_text"
+                            placeholder="e.g., How would you rate the communication skills?" required
+                            style="width: 100%; padding: 1rem; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-primary);">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 2rem;">
+                        <label style="font-weight: 600; margin-bottom: 0.75rem; display: block;">Response Format</label>
+                        <select name="question_type" required
+                            style="width: 100%; padding: 1rem; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-primary); cursor: pointer;">
+                            <option value="rating">Rating Scalar (1-5)</option>
+                            <option value="yes-no">Binary Option (Yes/No)</option>
+                            <option value="text">Open Narrative (Text)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary"
+                        style="width: 100%; height: 52px; font-weight: 700;">Deploy Question</button>
+                </form>
+                <div id="msg" class="alert" style="display: none; margin-top: 1.5rem; border-radius: 10px;"></div>
+            </div>
+
+            <div class="card" style="padding: 2.5rem;">
+                <h3 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span><i class="ph ph-books"></i></span> Active Registry
+                </h3>
+                <div id="questionsList" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Syncing results...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="../js/api.js"></script>
+
+
+    <script>
+        // Theme toggle logic
+        const storedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', storedTheme);
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            themeBtn.innerHTML = storedTheme === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            themeBtn.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+                themeBtn.innerHTML = next === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+            });
+        }
+
+        async function loadQuestions() {
+            try {
+                const res = await api('hod/questions');
+                const list = document.getElementById('questionsList');
+                const qs = res.questions || [];
+                list.innerHTML = qs.length ? qs.map(x => `
+                    <div style="padding: 1.25rem; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 12px; display: flex; justify-content: space-between; align-items: start; transition: border-color 0.2s;">
+                        <div>
+                            <div style="font-weight: 600; font-size: 1.05rem; margin-bottom: 0.5rem;">${x.question_text}</div>
+                            <span class="badge" style="font-size: 0.75rem; padding: 0.4rem 0.8rem; background: var(--bg-secondary); border: 1px solid var(--border);">${x.question_type.toUpperCase()}</span>
+                        </div>
+                        <div style="color: var(--accent-start); font-size: 1.2rem; cursor: help;" title="Active Question"><i class="ph ph-shield-check"></i></div>
+                    </div>
+                `).join('') : '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No questions defined yet.</p>';
+            } catch (e) { console.error(e); }
+        }
+
+        document.getElementById('questionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Deploying...';
+
+            try {
+                const fd = new FormData(e.target);
+                await api('hod/questions', { method: 'POST', body: JSON.stringify(Object.fromEntries(fd)) });
+                const msg = document.getElementById('msg');
+                msg.className = 'alert alert-success';
+                msg.textContent = 'Question successfully integrated into the registry.';
+                msg.style.display = 'block';
+                e.target.reset();
+                loadQuestions();
+                setTimeout(() => msg.style.display = 'none', 4000);
+            } catch (err) {
+                const msg = document.getElementById('msg');
+                msg.className = 'alert alert-danger';
+                msg.textContent = err.message;
+                msg.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+
+        async function logout() { await api('auth/logout', { method: 'POST' }); }
+        loadQuestions();
+    </script>
+</body>
+
+</html>

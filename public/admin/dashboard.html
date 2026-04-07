@@ -1,80 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Mentorship Feedback & Academic Monitoring</title>
     <link rel="stylesheet" href="../css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
+
 <body class="app-layout">
-    <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌓</button>
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
     <aside class="sidebar">
-        <div class="sidebar-logo">Admin Portal</div>
+        <div class="sidebar-logo">AdminPortal</div>
         <nav class="sidebar-nav">
-            <a href="dashboard.html" class="active">Dashboard</a>
-            <a href="students.html">Student Performance</a>
-            <a href="mentors.html">Mentor Performance</a>
-            <a href="feedback.html">Feedback Management</a>
-            <a href="assignments.html">Assignments</a>
-            <a href="questions.html">Questions</a>
-            <a href="reports.html">Reports</a>
-            <a href="../index.html" onclick="logout()">Logout</a>
+            <a href="dashboard.html" class="active">
+                <i class="ph ph-chart-bar"></i> Dashboard
+            </a>
+            <a href="mentors.html">
+                <i class="ph ph-chalkboard-teacher"></i> Mentors
+            </a>
+            <a href="students.html">
+                <i class="ph ph-graduation-cap"></i> Students
+            </a>
+            <a href="feedback.html">
+                <i class="ph ph-target"></i> Assignments
+            </a>
+            <a href="reports.html">
+                <i class="ph ph-clipboard-text"></i> Reports
+            </a>
+            <a href="questions.html">
+                <i class="ph ph-question"></i> Questions
+            </a>
+            <div style="margin-top: auto; padding: 1rem 2rem;">
+                <button class="theme-toggle" id="themeToggle"
+                    style="width: 40px; height: 40px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;"><i class="ph ph-moon"></i></button>
+                <a href="../index.html" onclick="logout()"
+                    style="color: var(--danger); padding: 0.5rem 0; display: block; font-weight: 600;">Logout</a>
+            </div>
         </nav>
     </aside>
+
     <main class="main-content">
-        <h1>Admin Dashboard</h1>
-        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Mentorship Feedback & Academic Monitoring System</p>
+        <header style="margin-bottom: 3rem;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Admin Dashboard</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Overview of mentorship and academic performance
+            </p>
+        </header>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="value" id="totalStudents">0</div>
-                <div class="label">Total Students</div>
+                <div class="stat-icon"><i class="ph ph-users"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="totalStudents">0</span>
+                    <span class="stat-label">Total Students</span>
+                </div>
             </div>
             <div class="stat-card">
-                <div class="value" id="totalMentors">0</div>
-                <div class="label">Total Mentors</div>
+                <div class="stat-icon"><i class="ph ph-chalkboard-teacher"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="totalMentors">0</span>
+                    <span class="stat-label">Total Mentors</span>
+                </div>
             </div>
             <div class="stat-card">
-                <div class="value" id="avgPerformance">0%</div>
-                <div class="label">Avg Student Performance</div>
+                <div class="stat-icon"><i class="ph ph-trend-up"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="avgPerformance">0%</span>
+                    <span class="stat-label">Avg Student Perf</span>
+                </div>
             </div>
             <div class="stat-card">
-                <div class="value" id="avgRating">0</div>
-                <div class="label">Avg Mentor Rating</div>
+                <div class="stat-icon"><i class="ph ph-star"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="avgRating">0</span>
+                    <span class="stat-label">Avg Mentor Rating</span>
+                </div>
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
             <div class="card">
-                <h3 class="card-title">Top 5 Mentors</h3>
+                <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="color: var(--accent-start);"><i class="ph ph-trophy"></i></span> Top 5 Mentors
+                </h3>
                 <div id="topMentors">
-                    <p style="color: var(--text-secondary);">Loading...</p>
+                    <p style="color: var(--text-secondary); padding: 1rem;"><i class="ph ph-spinner ph-spin"></i>
+                        Loading data...</p>
                 </div>
             </div>
-            <div class="card">
-                <h3 class="card-title">Low Attendance Alerts (&lt;75%)</h3>
+            <div class="card" style="border-left: 4px solid var(--danger);">
+                <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="color: var(--danger);"><i class="ph ph-warning"></i></span> Low Attendance Alerts (&lt;75%)
+                </h3>
                 <div id="lowAttendance">
-                    <p style="color: var(--text-secondary);">Loading...</p>
+                    <p style="color: var(--text-secondary); padding: 1rem;"><i class="ph ph-spinner ph-spin"></i>
+                        Checking alerts...</p>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <h3 class="card-title">Performance Overview</h3>
-            <canvas id="performanceChart" width="400" height="200"></canvas>
+            <h3 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                <span style="color: var(--accent-end);"><i class="ph ph-chart-bar"></i></span> Performance Trends
+            </h3>
+            <div style="height: 350px;">
+                <canvas id="performanceChart"></canvas>
+            </div>
         </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="../js/api.js"></script>
+
+
     <script>
-        // Theme toggle
+        // Enhanced Theme toggle
         const stored = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', stored);
-        document.getElementById('themeToggle').addEventListener('click', () => {
+        const toggleBtn = document.getElementById('themeToggle');
+        toggleBtn.innerHTML = stored === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
+
+        toggleBtn.addEventListener('click', () => {
             const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
+            toggleBtn.innerHTML = next === 'light' ? '<i class=\"ph ph-sun\"></i>' : '<i class=\"ph ph-moon\"></i>';
         });
 
         let chart = null;
@@ -88,35 +145,102 @@
 
                 const tm = document.getElementById('topMentors');
                 const top = res.top_mentors || [];
-                tm.innerHTML = top.length ? top.map((m, i) =>
-                    `<p>${i+1}. ${m.name} — ${m.avg_rating || '—'} (${m.feedback_count || 0} responses)</p>`
-                ).join('') : '<p style="color: var(--text-secondary);">No data yet.</p>';
+                tm.innerHTML = top.length ? `
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        ${top.map((m, i) => `
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border);">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <span style="font-weight: 700; color: var(--accent-start); font-size: 1.1rem;">#${i + 1}</span>
+                                    <span style="font-weight: 500;">${m.name}</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <span class="badge badge-success"><i class="ph ph-star"></i> ${m.avg_rating || '0.0'}</span>
+                                    <span style="color: var(--text-secondary); font-size: 0.85rem;">${m.feedback_count || 0} reviews</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No performance data available yet.</p>';
 
                 const la = document.getElementById('lowAttendance');
                 const low = res.low_attendance_students || [];
-                la.innerHTML = low.length ? low.map(s =>
-                    `<p><strong>${s.name}</strong> (${s.register_number}) — ${s.subject_code}: ${s.pct}%</p>`
-                ).join('') : '<p style="color: var(--success);">No low attendance alerts.</p>';
+                la.innerHTML = low.length ? `
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        ${low.map(s => `
+                            <div style="padding: 0.75rem 1rem; background: hsla(0, 84%, 60%, 0.05); border-radius: 12px; border: 1px solid hsla(0, 84%, 60%, 0.1); display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 600;">${s.name}</div>
+                                    <div style="color: var(--text-secondary); font-size: 0.85rem;">${s.register_number} • ${s.subject_code}</div>
+                                </div>
+                                <span class="badge badge-danger">${s.pct}%</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : `
+                    <div style="text-align: center; padding: 2rem; color: var(--success);">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;"><i class="ph ph-check-circle"></i></div>
+                        <p>All students meet attendance requirements.</p>
+                    </div>
+                `;
 
                 if (chart) chart.destroy();
-                chart = new Chart(document.getElementById('performanceChart'), {
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+
+                // Chart.js Modern Styling
+                chart = new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: ['Students', 'Mentors', 'Avg Perf %', 'Avg Rating'],
+                        labels: ['Students', 'Mentors', 'Avg Perf %', 'Avg Rating (Scaled)'],
                         datasets: [{
-                            label: 'Overview',
+                            label: 'Metric Value',
                             data: [
                                 res.total_students || 0,
                                 res.total_mentors || 0,
                                 res.avg_student_performance || 0,
                                 (res.avg_mentor_rating || 0) * 20
                             ],
-                            backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444']
+                            backgroundColor: [
+                                'rgba(99, 102, 241, 0.6)',
+                                'rgba(139, 92, 246, 0.6)',
+                                'rgba(236, 72, 153, 0.6)',
+                                'rgba(244, 63, 94, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(99, 102, 241, 1)',
+                                'rgba(139, 92, 246, 1)',
+                                'rgba(236, 72, 153, 1)',
+                                'rgba(244, 63, 94, 1)'
+                            ],
+                            borderWidth: 2,
+                            borderRadius: 12,
+                            barPercentage: 0.6
                         }]
                     },
                     options: {
                         responsive: true,
-                        scales: { y: { beginAtZero: true } }
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                titleFont: { size: 14, weight: 'bold' },
+                                bodyFont: { size: 13 },
+                                padding: 12,
+                                displayColors: false,
+                                borderRadius: 8
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: 'rgba(255, 255, 255, 0.5)' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: 'rgba(255, 255, 255, 0.5)' }
+                            }
+                        }
                     }
                 });
             } catch (e) {
@@ -128,4 +252,5 @@
         loadDashboard();
     </script>
 </body>
+
 </html>

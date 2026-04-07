@@ -4,6 +4,7 @@
  */
 
 const roles = {
+    hod: 4,
     admin: 3,
     mentor: 2,
     student: 1
@@ -30,15 +31,19 @@ function requireRole(...allowedRoles) {
 }
 
 function requireAdmin(req, res, next) {
-    return requireRole('admin')(req, res, next);
+    return requireRole('hod', 'admin')(req, res, next);
 }
 
 function requireMentor(req, res, next) {
-    return requireRole('admin', 'mentor')(req, res, next);
+    return requireRole('hod', 'admin', 'mentor')(req, res, next);
 }
 
 function requireStudent(req, res, next) {
-    return requireRole('admin', 'student')(req, res, next);
+    return requireRole('hod', 'admin', 'student')(req, res, next);
+}
+
+function requireHOD(req, res, next) {
+    return requireRole('hod')(req, res, next);
 }
 
 module.exports = {
@@ -47,5 +52,6 @@ module.exports = {
     requireAdmin,
     requireMentor,
     requireStudent,
+    requireHOD,
     roles
 };

@@ -35,10 +35,20 @@ async function seed() {
     const queries = [
         `INSERT OR IGNORE INTO users (name, email, password, role, department) 
          VALUES ('Admin', 'admin@college.edu', '${hashedPassword}', 'admin', 'Administration')`,
+    const feedbackQueries = [
         `INSERT OR IGNORE INTO feedback_questions (question_text, question_type) VALUES 
-         ('How would you rate the mentorship session?', 'rating'),
-         ('Was the mentor available when needed?', 'yes-no'),
+         ('How would you rate the mentorship session?', 'rating')`,
+        `INSERT OR IGNORE INTO feedback_questions (question_text, question_type) VALUES 
+         ('Was the mentor available when needed?', 'yes-no')`,
+        `INSERT OR IGNORE INTO feedback_questions (question_text, question_type) VALUES 
          ('Additional comments (optional)', 'text')`
+    ];
+
+    for (const q of feedbackQueries) {
+        await new Promise((resolve, reject) => {
+            db.run(q, (err) => { if (err) reject(err); else resolve(); });
+        });
+    }
     ];
 
     for (const q of queries) {
