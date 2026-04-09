@@ -17,6 +17,7 @@ const mentorRoutes = require('./routes/mentorRoutes');
 const hodRoutes = require('./routes/hodRoutes');
 
 const app = express();
+app.set('trust proxy', 1); // Trust first proxy (Render load balancer)
 const PORT = process.env.PORT || 3000;
 
 // Middleware
