@@ -8,9 +8,11 @@ const MySQLStore = require('express-mysql-session')(session);
 // MySQL store configuration
 const sessionStore = new MySQLStore({
     host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || 'janith@1234',
     database: process.env.DB_NAME || 'mentorship',
+    ssl: { rejectUnauthorized: false },
     clearExpired: true,
     checkExpirationInterval: 900000, // How frequently expired sessions will be cleared; milliseconds
     expiration: 86400000, // The maximum age of a valid session; milliseconds
